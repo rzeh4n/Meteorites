@@ -13,6 +13,8 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.util.Date;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import rzeh4n.meteorite.synchronization.Synchronizer;
@@ -20,7 +22,6 @@ import rzeh4n.meteorite.synchronization.Synchronizer;
 public class InitialActivity extends AppCompatActivity implements View.OnClickListener {
 
     public static final String LOG_TAG = InitialActivity.class.getSimpleName();
-
 
     @BindView(R.id.progresTitle) TextView mProgressTitle;
     @BindView(R.id.progressBar) ProgressBar mProgressBar;
@@ -33,11 +34,20 @@ public class InitialActivity extends AppCompatActivity implements View.OnClickLi
         setContentView(R.layout.activity_initial);
         ButterKnife.bind(this);
         mBtnRetry.setOnClickListener(this);
-        boolean synchronizeNow = true; // TODO: 10.6.16 only if successful synchronization has not happent yet
-        if (synchronizeNow) {
-            synchronize();
-        } else {
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        boolean synchronizedBefore = Utils.getPreferences(this).getBoolean(getResources().getString(R.string.pref_synchronized_before), false);
+        long lastSynchronized = Utils.getPreferences(this).getLong(getResources().getString(R.string.pref_last_synchronized), 0);
+        if (synchronizedBefore) {
+            Log.i(LOG_TAG, "last synchronized: " + new Date(lastSynchronized).toString());
             startActivity(new Intent(InitialActivity.this, MainActivity.class));
+            finish();
+        } else {
+            Log.i(LOG_TAG, "not synchronized yet");
+            synchronize();
         }
     }
 
@@ -60,6 +70,7 @@ public class InitialActivity extends AppCompatActivity implements View.OnClickLi
                 @Override
                 public void onFinished() {
                     startActivity(new Intent(InitialActivity.this, MainActivity.class));
+                    finish();
                 }
 
                 @Override
@@ -93,4 +104,5 @@ public class InitialActivity extends AppCompatActivity implements View.OnClickLi
             synchronize();
         }
     }
+
 }

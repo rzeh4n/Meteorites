@@ -3,6 +3,8 @@ package rzeh4n.meteorite.synchronization;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -19,6 +21,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import rzeh4n.meteorite.R;
+import rzeh4n.meteorite.Utils;
 import rzeh4n.meteorite.data.MeteoriteContract;
 
 /**
@@ -152,8 +155,12 @@ public class Synchronizer {
                 if (mError) {
                     mListener.onError(mErrorMsg);
                 } else {
+                    SharedPreferences.Editor editor = Utils.getPreferences(mContext).edit();
+                    Resources resources = mContext.getResources();
+                    editor.putBoolean(resources.getString(R.string.pref_synchronized_before), true);
+                    editor.putLong(resources.getString(R.string.pref_last_synchronized), System.currentTimeMillis());
+                    editor.commit();
                     mListener.onFinished();
-                    // TODO: 10.6.16 store into SharedProperties that was synchronized once
                 }
             }
 
