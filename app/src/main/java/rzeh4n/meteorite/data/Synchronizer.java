@@ -14,7 +14,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.Random;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -47,9 +46,6 @@ public class Synchronizer {
             protected Void doInBackground(Void... params) {
 
                 //clearDb();
-                //initializeFakeData();
-                //busyWait();
-
                 // TODO: 10.6.16 test error handling, network not available/disabled
                 try {
                     fetchJson();
@@ -61,7 +57,6 @@ public class Synchronizer {
             }
 
             private void clearDb() {
-                Log.i(LOG_TAG, "initializing database");
                 //delete all
                 int deleted = mContext.getContentResolver().delete(MeteoriteContract.MeteoriteEntry.CONTENT_URI, null, null);
                 Log.i(LOG_TAG, String.format("deleted %d records", deleted));
@@ -82,7 +77,6 @@ public class Synchronizer {
                 publishProgress(40);
                 JSONArray array = new JSONArray(jsonStr);
                 publishProgress(60);
-                Log.i(LOG_TAG, "size:  " + array.length());
                 int size = array.length();
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject meteorite = array.getJSONObject(i);
@@ -104,21 +98,52 @@ public class Synchronizer {
                 publishProgress(100);
             }
 
-            private void busyWait() {
-                for (int i = 0; i < 100; i++) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    publishProgress(i);
+            private void insertOrUpdate(Long id, String name, Integer mass, double lat, double lon) {
+                ContentResolver resolver = mContext.getContentResolver();
+                Cursor selectCursor = resolver.query(MeteoriteContract.MeteoriteEntry.buildMeteoriteUri(id), new String[]{MeteoriteContract.MeteoriteEntry._ID}, null, null, null);
+                boolean found = selectCursor.getCount() == 1;
+                selectCursor.close();
+                if (!found) {
+                    selectCursor.close();
+                    Uri uri = MeteoriteContract.MeteoriteEntry.CONTENT_URI;
+                    resolver.insert(uri, buildContentValuesForInsert(id, name, mass, lat, lon));
+                    //Log.d(LOG_TAG, "inserted: " + uri);
+                } else {
+                    selectCursor.close();
+                    Uri uri = MeteoriteContract.MeteoriteEntry.buildMeteoriteUri(id);
+                    resolver.update(uri, buildContentValuesForUpdate(name, mass, lat, lon), null, null);
+                    //Log.d(LOG_TAG, "updated: " + uri);
                 }
+            }
+
+            private ContentValues buildContentValuesForInsert(Long id, String name, Integer mass, double lat, double lon) {
+                ContentValues values = new ContentValues();
+                values.put(MeteoriteContract.MeteoriteEntry._ID, id);
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_NAME, name);
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_MASS, mass);
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LATITUDE, lat);
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LONGITUDE, lon);
+                return values;
+            }
+
+            private ContentValues buildContentValuesForUpdate(String name, Integer mass, double lat, double lon) {
+                ContentValues values = new ContentValues();
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_NAME, name);
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_MASS, mass);
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LATITUDE, lat);
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LONGITUDE, lon);
+                return values;
+            }
+
+            @Override
+            protected void onProgressUpdate(Integer... values) {
+                mListener.onProgress(values[0]);
             }
 
             @Override
             protected void onCancelled() {
                 super.onCancelled();
-                mListener.onError("canceled");
+                mListener.onError("synchronization task canceled");
             }
 
             @Override
@@ -130,67 +155,10 @@ public class Synchronizer {
                 }
             }
 
-            @Override
-            protected void onProgressUpdate(Integer... values) {
-                Log.i(LOG_TAG, "progress:  " + values[0]);
-                mListener.onProgress(values[0]);
-            }
-
-
         }.execute();
 
     }
 
-    private void initializeFakeData() {
-        insertOrUpdate(1l, "Flyweight Fry", 1, 40.771562, -73.993962);
-        insertOrUpdate(2l, "Big Ben", 1000, 51.500849, -0.124658);
-        insertOrUpdate(3l, "Typical Tony", 500, 39.930190, -83.806488);
-        Random rand = new Random();
-        for (int i = 1; i <= 20; i++) {
-            int mass = rand.nextInt(1000) + 1;
-            int lat = rand.nextInt(181) - 90;
-            int lon = rand.nextInt(361) - 180;
-            insertOrUpdate((long) 5 + i, "Random Randy " + i, mass, lat, lon);
-        }
-    }
-
-    private void insertOrUpdate(Long id, String name, Integer mass, double lat, double lon) {
-
-        ContentResolver resolver = mContext.getContentResolver();
-        Cursor selectCursor = resolver.query(MeteoriteContract.MeteoriteEntry.buildMeteoriteUri(id), new String[]{MeteoriteContract.MeteoriteEntry._ID}, null, null, null);
-        boolean found = selectCursor.getCount() == 1;
-        selectCursor.close();
-        if (!found) {
-            selectCursor.close();
-            Uri uri = MeteoriteContract.MeteoriteEntry.CONTENT_URI;
-            resolver.insert(uri, buildContentValuesForInsert(id, name, mass, lat, lon));
-            //Log.d(LOG_TAG, "inserted: " + uri);
-        } else {
-            selectCursor.close();
-            Uri uri = MeteoriteContract.MeteoriteEntry.buildMeteoriteUri(id);
-            resolver.update(uri, buildContentValuesForUpdate(name, mass, lat, lon), null, null);
-            //Log.d(LOG_TAG, "updated: " + uri);
-        }
-    }
-
-    private ContentValues buildContentValuesForInsert(Long id, String name, Integer mass, double lat, double lon) {
-        ContentValues values = new ContentValues();
-        values.put(MeteoriteContract.MeteoriteEntry._ID, id);
-        values.put(MeteoriteContract.MeteoriteEntry.COLUMN_NAME, name);
-        values.put(MeteoriteContract.MeteoriteEntry.COLUMN_MASS, mass);
-        values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LATITUDE, lat);
-        values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LONGITUDE, lon);
-        return values;
-    }
-
-    private ContentValues buildContentValuesForUpdate(String name, Integer mass, double lat, double lon) {
-        ContentValues values = new ContentValues();
-        values.put(MeteoriteContract.MeteoriteEntry.COLUMN_NAME, name);
-        values.put(MeteoriteContract.MeteoriteEntry.COLUMN_MASS, mass);
-        values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LATITUDE, lat);
-        values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LONGITUDE, lon);
-        return values;
-    }
 
     public interface Listener {
 
