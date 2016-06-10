@@ -50,7 +50,7 @@ public class Synchronizer {
 
             @Override
             protected Void doInBackground(Void... params) {
-                clearDb();
+                //clearDb();
                 try {
                     synchronize();
                 } catch (Throwable e) {
