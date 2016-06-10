@@ -4,4 +4,16 @@
 
     <string name="nasa_api_token">M3d0VvJgYnhcIZQKQu5dUAfE4</string>
 
+
+    <string name="sync_title_no_network">No internet connection</string>
+    <string name="sync_title_synchronizing">Synchronizing</string>
+    <string name="sync_title_network_error">Network error</string>
+
+    <string name="sync_snackbar_enable_network">To continue please connect your device to the Internet.</string>
+    <string name="sync_snackbar_network_error">Error synchronizing with server.</string>
+
+
+    <string name="btn_retry">Retry</string>
+
+
 </resources>

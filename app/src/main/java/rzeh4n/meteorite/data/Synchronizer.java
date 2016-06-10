@@ -44,12 +44,10 @@ public class Synchronizer {
 
             @Override
             protected Void doInBackground(Void... params) {
-
                 //clearDb();
-                // TODO: 10.6.16 test error handling, network not available/disabled
                 try {
-                    fetchJson();
-                } catch (Exception e) {
+                    synchronize();
+                } catch (Throwable e) {
                     mError = true;
                     mErrorMsg = e.getMessage();
                 }
@@ -62,7 +60,7 @@ public class Synchronizer {
                 Log.i(LOG_TAG, String.format("deleted %d records", deleted));
             }
 
-            private void fetchJson() throws IOException, JSONException {
+            private void synchronize() throws IOException, JSONException {
                 publishProgress(10);
                 //https://data.nasa.gov/resource/y77d-th95.json?$where=year >= '2011-01-01T00:00:00.000'
                 String url = "https://data.nasa.gov/resource/y77d-th95.json?%24where=year%20%3E%3D%20%272011-01-01T00%3A00%3A00.000%27";
@@ -152,6 +150,7 @@ public class Synchronizer {
                     mListener.onError(mErrorMsg);
                 } else {
                     mListener.onFinished();
+                    // TODO: 10.6.16 store into SharedProperties that was synchronized once
                 }
             }
 

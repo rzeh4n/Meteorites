@@ -10,7 +10,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".InitialActivity">
 
-    <!--TODO: proper style-->
     <ProgressBar
         android:id="@+id/progressBar"
         style="@style/Widget.AppCompat.ProgressBar.Horizontal"
@@ -20,15 +19,42 @@
         android:layout_centerInParent="true"
         android:indeterminate="false"
         android:max="100"
-        android:padding="16dp"
-        />
+        android:paddingBottom="16dp"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:paddingTop="16dp"/>
 
     <TextView
-        android:id="@+id/progressText"
+        android:id="@+id/progresTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/progressBar"
+        android:layout_centerHorizontal="true"
+        android:text="@string/sync_title_synchronizing"/>
+
+    <TextView
+        android:id="@+id/progressPercentage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/progressBar"
         android:layout_centerHorizontal="true"
-        />
+        android:text="0 %"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/progressPercentage"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/btnRetry"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_retry"/>
+
+    </LinearLayout>
+
 
 </RelativeLayout>
+
+

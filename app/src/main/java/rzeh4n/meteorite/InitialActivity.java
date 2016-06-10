@@ -1,36 +1,61 @@
 package rzeh4n.meteorite;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import rzeh4n.meteorite.data.Synchronizer;
 
-public class InitialActivity extends AppCompatActivity {
+public class InitialActivity extends AppCompatActivity implements View.OnClickListener {
 
     public static final String LOG_TAG = InitialActivity.class.getSimpleName();
 
 
+    @BindView(R.id.progresTitle) TextView mProgressTitle;
     @BindView(R.id.progressBar) ProgressBar mProgressBar;
-    @BindView(R.id.progressText) TextView mProgressText;
+    @BindView(R.id.progressPercentage) TextView mProgressPercentage;
+    @BindView(R.id.btnRetry) Button mBtnRetry;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_initial);
         ButterKnife.bind(this);
-        initData();
+        mBtnRetry.setOnClickListener(this);
+        boolean synchronizeNow = true; // TODO: 10.6.16 only if successful synchronization has not happent yet
+        if (synchronizeNow) {
+            synchronize();
+        } else {
+            startActivity(new Intent(InitialActivity.this, MainActivity.class));
+        }
     }
 
-    private void initData() {
-        boolean initializeNow = true;
-        if (initializeNow) {
+    private void synchronize() {
+        // TODO: 10.6.16 Move synchronization into Fragment without view so that it survives orientation change
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+        if (!isConnected) {
+            mProgressTitle.setText(getResources().getString(R.string.sync_title_no_network));
+            mProgressBar.setProgress(0);
+            mProgressPercentage.setText("0 %");
+            mBtnRetry.setVisibility(View.VISIBLE);
+            Snackbar.make(mProgressBar.getRootView(), R.string.sync_snackbar_enable_network, Snackbar.LENGTH_LONG)
+                    .show();
+        } else {//synchronize now
+            mBtnRetry.setVisibility(View.INVISIBLE);
+            mProgressTitle.setText(getResources().getString(R.string.sync_title_synchronizing));
             new Synchronizer(this, new Synchronizer.Listener() {
                 @Override
                 public void onFinished() {
@@ -39,7 +64,14 @@ public class InitialActivity extends AppCompatActivity {
 
                 @Override
                 public void onError(String message) {
-                    Toast.makeText(InitialActivity.this, message, Toast.LENGTH_LONG).show();
+                    Log.e(LOG_TAG, message);
+                    mBtnRetry.setVisibility(View.VISIBLE);
+                    mProgressBar.setProgress(0);
+                    mProgressPercentage.setText("0 %");
+                    mProgressTitle.setText(getResources().getString(R.string.sync_title_network_error));
+                    Snackbar.make(mProgressBar.getRootView(), R.string.sync_title_network_error, Snackbar.LENGTH_LONG)
+                            .setAction(R.string.btn_retry, InitialActivity.this)
+                            .show();
                 }
 
                 @Override
@@ -47,13 +79,18 @@ public class InitialActivity extends AppCompatActivity {
                     mProgressBar.setIndeterminate(false);
                     //Log.i(LOG_TAG, "progress: " + percentage);
                     mProgressBar.setProgress(percentage);
-                    mProgressText.setText(String.format("%d %%", percentage));
+                    mProgressPercentage.setText(String.format("%d %%", percentage));
                 }
             }).run();
-        } else {
-            Log.i(LOG_TAG, "database initialized already");
-            startActivity(new Intent(InitialActivity.this, MainActivity.class));
         }
     }
 
+    @Override
+    public void onClick(View v) {
+        if (v == mBtnRetry) {
+            synchronize();
+        } else { //must have been snackbar
+            synchronize();
+        }
+    }
 }
