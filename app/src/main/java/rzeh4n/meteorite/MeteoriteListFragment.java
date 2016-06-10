@@ -1,6 +1,7 @@
 package rzeh4n.meteorite;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -8,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,12 +59,16 @@ public class MeteoriteListFragment extends Fragment implements LoaderManager.Loa
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 mPosition = position;
+                Log.i(LOG_TAG, "clicked: " + id);
+                openMapActivity(id);
             }
         });
         mListView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                // TODO: 9.6.16 implement
+                //Log.i(LOG_TAG, "selected: " + id);
+                mPosition = position;
+                openMapActivity(id);
             }
 
             @Override
@@ -72,6 +78,13 @@ public class MeteoriteListFragment extends Fragment implements LoaderManager.Loa
         });
         return root;
     }
+
+    private void openMapActivity(long id) {
+        Intent intent = new Intent(getActivity(), MapActivity.class);
+        intent.putExtra(MapActivity.EXTRA_ID, id);
+        startActivity(intent);
+    }
+
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {

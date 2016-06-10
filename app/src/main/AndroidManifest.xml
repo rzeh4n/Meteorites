@@ -9,12 +9,15 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/google_maps_key"/>
+
         <provider
             android:name=".data.MeteoriteProvider"
             android:authorities="rzeh4n.meteorites"/>
 
         <activity android:name=".MainActivity">
-
         </activity>
         <activity android:name=".InitialActivity">
             <intent-filter>
@@ -22,6 +25,14 @@
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".MapActivity"
+            android:label="@string/title_activity_maps">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="rzeh4n.meteorite.MainActivity"/>
         </activity>
     </application>
 

@@ -26,7 +26,7 @@ public class MeteoriteContract {
 
         public static final String COLUMN_LATITUDE = "lat";
 
-        public static final String COLUMN_LONGTITUDE = "long";
+        public static final String COLUMN_LONGITUDE = "lon";
 
 
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_METEORITES).build();

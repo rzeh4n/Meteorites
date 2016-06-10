@@ -26,7 +26,7 @@ public class DbHelper extends SQLiteOpenHelper {
                         MeteoriteContract.MeteoriteEntry.COLUMN_YEAR + " INTEGER," +
                         MeteoriteContract.MeteoriteEntry.COLUMN_MASS + " INTEGER," +
                         MeteoriteContract.MeteoriteEntry.COLUMN_LATITUDE + " REAL," +
-                        MeteoriteContract.MeteoriteEntry.COLUMN_LONGTITUDE + " REAL" +
+                        MeteoriteContract.MeteoriteEntry.COLUMN_LONGITUDE + " REAL" +
                         " );";
         String statementCreateIndexMeteoriteMass =
                 "CREATE INDEX " + MeteoriteContract.MeteoriteEntry.TABLE_NAME + "_" + MeteoriteContract.MeteoriteEntry.COLUMN_MASS +
