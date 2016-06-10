@@ -130,11 +130,20 @@ public class MeteoriteProvider extends ContentProvider {
 
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-        // TODO: 9.6.16 implement
-        return 0;
+        switch (sUriMatcher.match(uri)) {
+            // /meteorites/#
+            case METEORITE_BY_ID: {
+                //ignoring user defined selection
+                selection = MeteoriteContract.MeteoriteEntry._ID + "=?";
+                selectionArgs = new String[]{extractMeteoriteId(uri).toString()};
+                return mDbHelper.getReadableDatabase().update(MeteoriteContract.MeteoriteEntry.TABLE_NAME, values, selection, selectionArgs);
+            }
+            default:
+                throw new UnsupportedOperationException(uri.toString());
+        }
     }
 
-    private long extractMeteoriteId(Uri uri) {
+    private Long extractMeteoriteId(Uri uri) {
         return Long.parseLong(uri.getPathSegments().get(1));
     }
 }

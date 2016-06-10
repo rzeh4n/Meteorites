@@ -29,7 +29,6 @@ public class InitialActivity extends AppCompatActivity {
     }
 
     private void initData() {
-        //just for testing, won't bother with worker thread here
         boolean initializeNow = true;
         if (initializeNow) {
             new Synchronizer(this, new Synchronizer.Listener() {

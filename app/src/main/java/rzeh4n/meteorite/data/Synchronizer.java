@@ -1,7 +1,9 @@
 package rzeh4n.meteorite.data;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
@@ -153,17 +155,36 @@ public class Synchronizer {
     }
 
     private void insertOrUpdate(Long id, String name, Integer mass, double lat, double lon) {
-        // TODO: 10.6.16 insert or update, just inserting now
-        ContentValues contentValues = buildContentValues(id, name, mass, lat, lon);
-        Uri insertedUri = mContext.getContentResolver().insert(MeteoriteContract.MeteoriteEntry.CONTENT_URI, contentValues);
-        //Log.d(LOG_TAG, "inserted: " + ContentUris.parseId(insertedUri));
-        Log.d(LOG_TAG, "inserted: " + insertedUri);
+
+        ContentResolver resolver = mContext.getContentResolver();
+        Cursor selectCursor = resolver.query(MeteoriteContract.MeteoriteEntry.buildMeteoriteUri(id), new String[]{MeteoriteContract.MeteoriteEntry._ID}, null, null, null);
+        boolean found = selectCursor.getCount() == 1;
+        selectCursor.close();
+        if (!found) {
+            selectCursor.close();
+            Uri uri = MeteoriteContract.MeteoriteEntry.CONTENT_URI;
+            resolver.insert(uri, buildContentValuesForInsert(id, name, mass, lat, lon));
+            //Log.d(LOG_TAG, "inserted: " + uri);
+        } else {
+            selectCursor.close();
+            Uri uri = MeteoriteContract.MeteoriteEntry.buildMeteoriteUri(id);
+            resolver.update(uri, buildContentValuesForUpdate(name, mass, lat, lon), null, null);
+            //Log.d(LOG_TAG, "updated: " + uri);
+        }
     }
 
-
-    private ContentValues buildContentValues(Long id, String name, Integer mass, double lat, double lon) {
+    private ContentValues buildContentValuesForInsert(Long id, String name, Integer mass, double lat, double lon) {
         ContentValues values = new ContentValues();
         values.put(MeteoriteContract.MeteoriteEntry._ID, id);
+        values.put(MeteoriteContract.MeteoriteEntry.COLUMN_NAME, name);
+        values.put(MeteoriteContract.MeteoriteEntry.COLUMN_MASS, mass);
+        values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LATITUDE, lat);
+        values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LONGITUDE, lon);
+        return values;
+    }
+
+    private ContentValues buildContentValuesForUpdate(String name, Integer mass, double lat, double lon) {
+        ContentValues values = new ContentValues();
         values.put(MeteoriteContract.MeteoriteEntry.COLUMN_NAME, name);
         values.put(MeteoriteContract.MeteoriteEntry.COLUMN_MASS, mass);
         values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LATITUDE, lat);
@@ -175,7 +196,7 @@ public class Synchronizer {
 
         public void onFinished();
 
-        public void onError(String messag);
+        public void onError(String message);
 
         public void onProgress(int percentage);
 
