@@ -2,13 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="rzeh4n.meteorite">
 
+    <!--for scheduling alarm for synchronization service after startup-->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
     <application
+        android:name=".MeteoriteApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key"/>
@@ -16,6 +19,18 @@
         <provider
             android:name=".data.MeteoriteProvider"
             android:authorities="rzeh4n.meteorites"/>
+
+        <service
+            android:name=".synchronization.SynchronizationService"
+            android:enabled="true">
+        </service>
+
+        <receiver android:name=".synchronization.SynchronizationAlarmReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
 
         <activity android:name=".MainActivity">
         </activity>
@@ -26,7 +41,6 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
         <activity
             android:name=".MapActivity"
             android:label="@string/title_activity_maps">
@@ -34,6 +48,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="rzeh4n.meteorite.MainActivity"/>
         </activity>
+
+
     </application>
 
 </manifest>

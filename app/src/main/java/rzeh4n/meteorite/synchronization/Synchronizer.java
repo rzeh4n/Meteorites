@@ -1,4 +1,4 @@
-package rzeh4n.meteorite.data;
+package rzeh4n.meteorite.synchronization;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -19,6 +19,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import rzeh4n.meteorite.R;
+import rzeh4n.meteorite.data.MeteoriteContract;
 
 /**
  * Created by Martin Řehánek on 10.6.16.
@@ -87,6 +88,7 @@ public class Synchronizer {
                     //see https://dev.socrata.com/docs/datatypes/point.html#2.1
                     double longitude = coords.getDouble(0);
                     double latitude = coords.getDouble(1);
+                    // TODO: 10.6.16 bulkInsert
                     insertOrUpdate(id, name, mass, latitude, longitude);
                     if (i % 100 == 0) {
                         float ratio = (float) i / size;
@@ -98,7 +100,8 @@ public class Synchronizer {
 
             private void insertOrUpdate(Long id, String name, Integer mass, double lat, double lon) {
                 ContentResolver resolver = mContext.getContentResolver();
-                Cursor selectCursor = resolver.query(MeteoriteContract.MeteoriteEntry.buildMeteoriteUri(id), new String[]{MeteoriteContract.MeteoriteEntry._ID}, null, null, null);
+                Cursor selectCursor = resolver.query(MeteoriteContract.MeteoriteEntry.buildMeteoriteUri(id),
+                        new String[]{MeteoriteContract.MeteoriteEntry._ID}, null, null, null);
                 boolean found = selectCursor.getCount() == 1;
                 selectCursor.close();
                 if (!found) {

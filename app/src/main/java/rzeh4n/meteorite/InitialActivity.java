@@ -15,7 +15,7 @@ import android.widget.TextView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import rzeh4n.meteorite.data.Synchronizer;
+import rzeh4n.meteorite.synchronization.Synchronizer;
 
 public class InitialActivity extends AppCompatActivity implements View.OnClickListener {
 
