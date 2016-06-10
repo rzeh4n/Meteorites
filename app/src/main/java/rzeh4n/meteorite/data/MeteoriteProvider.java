@@ -96,23 +96,44 @@ public class MeteoriteProvider extends ContentProvider {
     @Nullable
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        final SQLiteDatabase db = mDbHelper.getWritableDatabase();
-        final int match = sUriMatcher.match(uri);
-        Uri insertedUri;
-        switch (match) {
+        switch (sUriMatcher.match(uri)) {
             case METEORITES: {
-                long _id = db.insert(MeteoriteContract.MeteoriteEntry.TABLE_NAME, null, values);
-                if (_id > 0)
-                    insertedUri = MeteoriteContract.MeteoriteEntry.buildMeteoriteUri(_id);
-                else
+                long _id = mDbHelper.getWritableDatabase().insert(MeteoriteContract.MeteoriteEntry.TABLE_NAME, null, values);
+                if (_id > 0) {
+                    Uri insertedUri = MeteoriteContract.MeteoriteEntry.buildMeteoriteUri(_id);
+                    getContext().getContentResolver().notifyChange(uri, null);
+                    return insertedUri;
+                } else {
                     throw new android.database.SQLException("Failed to insert row into " + uri);
-                break;
+                }
             }
             default:
                 throw new UnsupportedOperationException(uri.toString());
         }
-        getContext().getContentResolver().notifyChange(uri, null);
-        return insertedUri;
+    }
+
+
+    @Override
+    public int bulkInsert(Uri uri, ContentValues[] valuesArray) {
+        switch (sUriMatcher.match(uri)) {
+            case METEORITES: {
+                SQLiteDatabase db = mDbHelper.getWritableDatabase();
+                int inserted = 0;
+                db.beginTransaction();
+                try {
+                    for (ContentValues values : valuesArray) {
+                        db.insert(MeteoriteContract.MeteoriteEntry.TABLE_NAME, null, values);
+                        inserted++;
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                    return inserted;
+                }
+            }
+            default:
+                throw new UnsupportedOperationException(uri.toString());
+        }
     }
 
     @Override

@@ -16,6 +16,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -48,7 +50,7 @@ public class Synchronizer {
 
             @Override
             protected Void doInBackground(Void... params) {
-                //clearDb();
+                clearDb();
                 try {
                     synchronize();
                 } catch (Throwable e) {
@@ -80,6 +82,7 @@ public class Synchronizer {
                 JSONArray array = new JSONArray(jsonStr);
                 publishProgress(60);
                 int size = array.length();
+                List<Meteorite> buffer = new ArrayList<Meteorite>(100);
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject meteorite = array.getJSONObject(i);
                     Long id = meteorite.getLong("id");
@@ -89,53 +92,62 @@ public class Synchronizer {
                     JSONArray coords = location.getJSONArray("coordinates");
                     //longitude first, latitude second,
                     //see https://dev.socrata.com/docs/datatypes/point.html#2.1
-                    double longitude = coords.getDouble(0);
-                    double latitude = coords.getDouble(1);
-                    // TODO: 10.6.16 bulkInsert
-                    insertOrUpdate(id, name, mass, latitude, longitude);
+                    Double longitude = coords.getDouble(0);
+                    Double latitude = coords.getDouble(1);
+                    buffer.add(new Meteorite(id, name, mass, latitude, longitude));
                     if (i % 100 == 0) {
+                        bulkInsertOrUpdate(buffer);
                         float ratio = (float) i / size;
                         publishProgress(60 + (int) (40 * ratio));
+                        buffer = new ArrayList<>(100);
                     }
+                }
+                if (!buffer.isEmpty()) {
+                    bulkInsertOrUpdate(buffer);
                 }
                 publishProgress(100);
             }
 
-            private void insertOrUpdate(Long id, String name, Integer mass, double lat, double lon) {
+            private void bulkInsertOrUpdate(List<Meteorite> buffer) {
+                List<ContentValues> toBeInserted = new ArrayList<>();
                 ContentResolver resolver = mContext.getContentResolver();
-                Cursor selectCursor = resolver.query(MeteoriteContract.MeteoriteEntry.buildMeteoriteUri(id),
-                        new String[]{MeteoriteContract.MeteoriteEntry._ID}, null, null, null);
-                boolean found = selectCursor.getCount() == 1;
-                selectCursor.close();
-                if (!found) {
+                for (Meteorite meteorite : buffer) {
+                    Cursor selectCursor = resolver.query(MeteoriteContract.MeteoriteEntry.buildMeteoriteUri(meteorite.getId()),
+                            new String[]{MeteoriteContract.MeteoriteEntry._ID}, null, null, null);
+                    boolean found = selectCursor.getCount() == 1;
                     selectCursor.close();
-                    Uri uri = MeteoriteContract.MeteoriteEntry.CONTENT_URI;
-                    resolver.insert(uri, buildContentValuesForInsert(id, name, mass, lat, lon));
-                    //Log.d(LOG_TAG, "inserted: " + uri);
-                } else {
-                    selectCursor.close();
-                    Uri uri = MeteoriteContract.MeteoriteEntry.buildMeteoriteUri(id);
-                    resolver.update(uri, buildContentValuesForUpdate(name, mass, lat, lon), null, null);
-                    //Log.d(LOG_TAG, "updated: " + uri);
+                    if (!found) {
+                        toBeInserted.add(buildContentValuesForInsert(meteorite));
+                        //Log.d(LOG_TAG, "to be inserted: " + uri);
+                    } else {
+                        Uri uri = MeteoriteContract.MeteoriteEntry.buildMeteoriteUri(meteorite.getId());
+                        resolver.update(uri, buildContentValuesForUpdate(meteorite), null, null);
+                        //Log.d(LOG_TAG, "updated: " + uri);
+                    }
                 }
+                //bulk insert
+                ContentValues[] values = new ContentValues[toBeInserted.size()];
+                values = toBeInserted.toArray(values);
+                int inserted = resolver.bulkInsert(MeteoriteContract.MeteoriteEntry.CONTENT_URI, values);
+                Log.d(LOG_TAG, "inserted: " + inserted);
             }
 
-            private ContentValues buildContentValuesForInsert(Long id, String name, Integer mass, double lat, double lon) {
+            private ContentValues buildContentValuesForInsert(Meteorite meteorite) {
                 ContentValues values = new ContentValues();
-                values.put(MeteoriteContract.MeteoriteEntry._ID, id);
-                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_NAME, name);
-                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_MASS, mass);
-                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LATITUDE, lat);
-                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LONGITUDE, lon);
+                values.put(MeteoriteContract.MeteoriteEntry._ID, meteorite.getId());
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_NAME, meteorite.getName());
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_MASS, meteorite.getMass());
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LATITUDE, meteorite.getLat());
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LONGITUDE, meteorite.getLon());
                 return values;
             }
 
-            private ContentValues buildContentValuesForUpdate(String name, Integer mass, double lat, double lon) {
+            private ContentValues buildContentValuesForUpdate(Meteorite meteorite) {
                 ContentValues values = new ContentValues();
-                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_NAME, name);
-                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_MASS, mass);
-                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LATITUDE, lat);
-                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LONGITUDE, lon);
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_NAME, meteorite.getName());
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_MASS, meteorite.getMass());
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LATITUDE, meteorite.getLat());
+                values.put(MeteoriteContract.MeteoriteEntry.COLUMN_LONGITUDE, meteorite.getLon());
                 return values;
             }
 
@@ -178,6 +190,42 @@ public class Synchronizer {
         public void onProgress(int percentage);
 
 
+    }
+
+    static class Meteorite {
+        private final Long id;
+        private final String name;
+        private final Integer mass;
+        private final Double lat;
+        private final Double lon;
+
+        Meteorite(Long id, String name, Integer mass, Double lat, Double lon) {
+            this.id = id;
+            this.name = name;
+            this.mass = mass;
+            this.lat = lat;
+            this.lon = lon;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Integer getMass() {
+            return mass;
+        }
+
+        public Double getLat() {
+            return lat;
+        }
+
+        public Double getLon() {
+            return lon;
+        }
     }
 
 }
