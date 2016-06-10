@@ -23,7 +23,6 @@ public class DbHelper extends SQLiteOpenHelper {
                 "CREATE TABLE " + MeteoriteContract.MeteoriteEntry.TABLE_NAME + " (" +
                         MeteoriteContract.MeteoriteEntry._ID + " INTEGER PRIMARY KEY," +
                         MeteoriteContract.MeteoriteEntry.COLUMN_NAME + " TEXT," +
-                        MeteoriteContract.MeteoriteEntry.COLUMN_YEAR + " INTEGER," +
                         MeteoriteContract.MeteoriteEntry.COLUMN_MASS + " INTEGER," +
                         MeteoriteContract.MeteoriteEntry.COLUMN_LATITUDE + " REAL," +
                         MeteoriteContract.MeteoriteEntry.COLUMN_LONGITUDE + " REAL" +

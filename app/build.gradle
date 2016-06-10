@@ -25,6 +25,8 @@ dependencies {
     def android_support_version = '23.4.0'
     compile "com.android.support:appcompat-v7:$android_support_version"
     compile 'com.google.android.gms:play-services:9.0.2'
+    compile 'com.squareup.okhttp3:okhttp:3.3.1'
+
 }
 
 /*butterknife*/

@@ -23,20 +23,20 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
 
     private static final String[] COLUMNS = {
             MeteoriteContract.MeteoriteEntry.COLUMN_NAME,
-            MeteoriteContract.MeteoriteEntry.COLUMN_YEAR,
+            MeteoriteContract.MeteoriteEntry.COLUMN_MASS,
             MeteoriteContract.MeteoriteEntry.COLUMN_LATITUDE,
             MeteoriteContract.MeteoriteEntry.COLUMN_LONGITUDE,
     };
 
     private static final int CURSOR_COL_NAME = 0;
-    private static final int CURSOR_COL_YEAR = 1;
+    private static final int CURSOR_COL_MASS = 1;
     private static final int CURSOR_COL_LATITUDE = 2;
     private static final int CURSOR_COL_LONGITUDE = 3;
 
     private GoogleMap mMap;
     private long mId = -1;
     private String mName;
-    private int mYear;
+    private int mMass;
     private float mLatitude;
     private float mLongitude;
 
@@ -65,7 +65,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             if (cursor.isBeforeFirst()) {
                 cursor.moveToFirst();
                 mName = cursor.getString(CURSOR_COL_NAME);
-                mYear = cursor.getInt(CURSOR_COL_YEAR);
+                mMass = cursor.getInt(CURSOR_COL_MASS);
                 mLatitude = cursor.getFloat(CURSOR_COL_LATITUDE);
                 mLongitude = cursor.getFloat(CURSOR_COL_LONGITUDE);
             }
@@ -103,7 +103,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
         LatLng position = new LatLng(mLatitude, mLongitude);
         //Log.i(LOG_TAG, "position: " + position);
         MarkerOptions options = new MarkerOptions().position(position)//
-                .title(mName).visible(true).snippet("" + mYear);
+                .title(mName).visible(true).snippet(Utils.formatMass(mMass));
         mMap.addMarker(options);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(position));
 

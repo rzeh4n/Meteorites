@@ -20,8 +20,6 @@ public class MeteoriteContract {
 
         public static final String COLUMN_NAME = "name";
 
-        public static final String COLUMN_YEAR = "year";
-
         public static final String COLUMN_MASS = "mass";
 
         public static final String COLUMN_LATITUDE = "lat";

@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Meteorite</string>
     <string name="title_activity_maps">Map</string>
+
+    <string name="nasa_api_token">M3d0VvJgYnhcIZQKQu5dUAfE4</string>
+
 </resources>

@@ -127,7 +127,7 @@ public class MeteoriteListFragment extends Fragment implements LoaderManager.Loa
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             ((TextView) view.findViewById(R.id.name)).setText(cursor.getString(CURSOR_COL_NAME));
-            ((TextView) view.findViewById(R.id.mass)).setText(String.format("%d g", cursor.getInt(CURSOR_COL_MASS)));
+            ((TextView) view.findViewById(R.id.mass)).setText(Utils.formatMass(cursor.getInt(CURSOR_COL_MASS)));
         }
     }
 
