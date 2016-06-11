@@ -2,6 +2,7 @@ package rzeh4n.meteorite;
 
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.v4.app.FragmentActivity;
@@ -11,6 +12,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -19,7 +21,7 @@ import rzeh4n.meteorite.data.MeteoriteContract;
 public class MapActivity extends FragmentActivity implements OnMapReadyCallback {
 
     public static final String EXTRA_ID = "id";
-    private static final String LOG_TAG = InitialActivity.class.getSimpleName();
+    private static final String LOG_TAG = MapActivity.class.getSimpleName();
 
     private static final String[] COLUMNS = {
             MeteoriteContract.MeteoriteEntry.COLUMN_NAME,
@@ -99,13 +101,35 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
-
         LatLng position = new LatLng(mLatitude, mLongitude);
-        //Log.i(LOG_TAG, "position: " + position);
         MarkerOptions options = new MarkerOptions().position(position)//
                 .title(mName).visible(true).snippet(Utils.formatMass(mMass));
         mMap.addMarker(options);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(position));
+        zoomAfterWhile(googleMap, position, 1000, 4);
+    }
+
+    private void zoomAfterWhile(final GoogleMap map, final LatLng position, final int delayMs, final int zoomLevel) {
+        new AsyncTask<Void, Void, Void>() {
+
+            @Override
+            protected Void doInBackground(Void... params) {
+                try {
+                    Thread.sleep(delayMs);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                map.animateCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder()
+                        .target(position)
+                        .zoom(zoomLevel)
+                        .build()));
+            }
+        }.execute();
 
     }
 }
