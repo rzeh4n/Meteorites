@@ -13,7 +13,7 @@ import rzeh4n.meteorite.data.MeteoriteContract;
 
 public class MainActivity extends AppCompatActivity {
 
-    @BindView(R.id.toolbar) Toolbar mAppbar;
+    @BindView(R.id.toolbar) Toolbar mActionBar;
     private int mMeteoritesCount = -1;
 
     @Override
@@ -21,11 +21,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-
-        setSupportActionBar(mAppbar);
+        setSupportActionBar(mActionBar);
         getSupportActionBar().setHomeButtonEnabled(false);
-        getSupportActionBar().setTitle(String.format("%d meteorites", getMeteoritesCount()));
         getSupportActionBar().setDisplayShowTitleEnabled(true);
+        getSupportActionBar().setTitle(String.format("%d meteorites", getMeteoritesCount()));
     }
 
     private int getMeteoritesCount() {

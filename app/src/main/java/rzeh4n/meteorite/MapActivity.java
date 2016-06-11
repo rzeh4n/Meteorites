@@ -5,7 +5,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.PersistableBundle;
-import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -16,12 +17,16 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import rzeh4n.meteorite.data.MeteoriteContract;
 
-public class MapActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     public static final String EXTRA_ID = "id";
     private static final String LOG_TAG = MapActivity.class.getSimpleName();
+
+    @BindView(R.id.toolbar) Toolbar mActionBar;
 
     private static final String[] COLUMNS = {
             MeteoriteContract.MeteoriteEntry.COLUMN_NAME,
@@ -47,7 +52,15 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+        ButterKnife.bind(this);
         initData(savedInstanceState);
+        setSupportActionBar(mActionBar);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowTitleEnabled(true);
+        getSupportActionBar().setTitle(mName);
+        getSupportActionBar().setSubtitle(Utils.formatMass(mMass));
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -131,5 +144,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback 
             }
         }.execute();
 
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        //because of this: http://stackoverflow.com/questions/14462456/returning-from-an-activity-using-navigateupfromsametask/16147110#16147110
+        //appcompat default behaviour of button up/back is that it creates the activity anew with savedInstanceState=null
+        onBackPressed();
+        return true;
     }
 }
