@@ -9,17 +9,20 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import rzeh4n.meteorite.data.CursorRecyclerViewAdapter;
 import rzeh4n.meteorite.data.MeteoriteContract;
 
 /**
@@ -42,10 +45,9 @@ public class MeteoriteListFragment extends Fragment implements LoaderManager.Loa
     private static final String STATE_KEY_SELECTED_POSITION = "selected_position";
     private static final int LOADER = 0;
 
-    @BindView(R.id.list)
-    ListView mListView;
+    @BindView(R.id.list) RecyclerView mList;
 
-    private ListAdapter mListAdapter;
+    private CursorRecyclerViewAdapter mCursorRecyclerViewAdapter;
     private int mPosition = ListView.INVALID_POSITION;
 
     @Nullable
@@ -53,38 +55,32 @@ public class MeteoriteListFragment extends Fragment implements LoaderManager.Loa
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_meteorite_list, container, false);
         ButterKnife.bind(this, root);
-        mListAdapter = new ListAdapter(getActivity(), null, 0);
-        mListView.setAdapter(mListAdapter);
-        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                mPosition = position;
-                Log.i(LOG_TAG, "clicked: " + id);
-                openMapActivity(id);
-            }
-        });
-        mListView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                //Log.i(LOG_TAG, "selected: " + id);
-                mPosition = position;
-                openMapActivity(id);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
+        mCursorRecyclerViewAdapter = new RecyclerViewAdapter(getActivity(), null);
+        mList.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mList.setAdapter(mCursorRecyclerViewAdapter);
         return root;
     }
 
-    private void openMapActivity(long id) {
-        Intent intent = new Intent(getActivity(), MapActivity.class);
-        intent.putExtra(MapActivity.EXTRA_ID, id);
-        startActivity(intent);
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
     }
 
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
+    @Subscribe
+    public void onMessageEvent(ItemClickEvent event) {
+        mPosition = event.position;
+        //go to map activity
+        Intent intent = new Intent(getActivity(), MapActivity.class);
+        intent.putExtra(MapActivity.EXTRA_ID, event.meteoriteId);
+        startActivity(intent);
+    }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -99,35 +95,80 @@ public class MeteoriteListFragment extends Fragment implements LoaderManager.Loa
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        mListAdapter.swapCursor(data);
+        mCursorRecyclerViewAdapter.swapCursor(data);
         if (mPosition != ListView.INVALID_POSITION) {
             // If we don't need to restart the loader, and there's a desired position to restore
             // to, do so now.
-            mListView.smoothScrollToPosition(mPosition);
+            mList.smoothScrollToPosition(mPosition);
         }
-
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        mListAdapter.swapCursor(null);
+        mCursorRecyclerViewAdapter.swapCursor(null);
     }
 
-    public static class ListAdapter extends CursorAdapter {
+    public static class Meteorite {
+        public final Long id;
+        public final String name;
+        public final Integer mass;
 
-        public ListAdapter(Context context, Cursor c, int flags) {
-            super(context, c, flags);
+        public Meteorite(Long id, String name, Integer mass) {
+            this.id = id;
+            this.name = name;
+            this.mass = mass;
+        }
+
+        public static Meteorite fromCursor(Cursor cursor) {
+            return new Meteorite(cursor.getLong(CURSOR_COL_ID), cursor.getString(CURSOR_COL_NAME), cursor.getInt(CURSOR_COL_MASS));
+        }
+    }
+
+
+    public static class RecyclerViewAdapter extends CursorRecyclerViewAdapter<RecyclerViewAdapter.ViewHolder> {
+
+        public RecyclerViewAdapter(Context context, Cursor cursor) {
+            super(context, cursor);
+        }
+
+        public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+            private Long mId;
+            private int mPosition;
+            @BindView(R.id.name) TextView mName;
+            @BindView(R.id.mass) TextView mMass;
+
+            public ViewHolder(View view) {
+                super(view);
+                ButterKnife.bind(this, view);
+                view.setOnClickListener(this);
+            }
+
+            public void bind(Meteorite meteorite, int position) {
+                mId = meteorite.id;
+                mPosition = position;
+                mName.setText(meteorite.name);
+                mMass.setText(Utils.formatMass(meteorite.mass));
+            }
+
+            @Override
+            public void onClick(View v) {
+                //Log.i(LOG_TAG, "clicked: " + mId);
+                EventBus.getDefault().post(new ItemClickEvent(mId, mPosition));
+            }
         }
 
         @Override
-        public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            return LayoutInflater.from(context).inflate(R.layout.item_meteorite, parent, false);
+        public void onBindViewHolder(ViewHolder viewHolder, Cursor cursor) {
+            Meteorite meteorite = Meteorite.fromCursor(cursor);
+            viewHolder.bind(meteorite, cursor.getPosition());
         }
 
         @Override
-        public void bindView(View view, Context context, Cursor cursor) {
-            ((TextView) view.findViewById(R.id.name)).setText(cursor.getString(CURSOR_COL_NAME));
-            ((TextView) view.findViewById(R.id.mass)).setText(Utils.formatMass(cursor.getInt(CURSOR_COL_MASS)));
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_meteorite, parent, false);
+            ViewHolder vh = new ViewHolder(itemView);
+            return vh;
         }
     }
 
@@ -146,6 +187,16 @@ public class MeteoriteListFragment extends Fragment implements LoaderManager.Loa
     public void onActivityCreated(Bundle savedInstanceState) {
         getLoaderManager().initLoader(LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
+    }
+
+    public static class ItemClickEvent {
+        public final Long meteoriteId;
+        public final Integer position;
+
+        public ItemClickEvent(Long meteoriteId, int position) {
+            this.meteoriteId = meteoriteId;
+            this.position = position;
+        }
     }
 
 }
