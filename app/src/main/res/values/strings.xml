@@ -14,12 +14,13 @@
 
 
     <string name="btn_retry">Retry</string>
-
+    <string name="btn_close">Close</string>
 
     <string name="appbar_scrolling_view_behavior" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
 
 
     <string name="menu_about">About</string>
-
+    <!--<string name="about_app_attribution">Launcher icon from <a href="https://icons8.com/web-app/11894/comet">icons8</a>. Unchanged image by Day Donaldson from <a href="https://www.flickr.com/photos/thespeakernews/23688226075">Flicker</a> licenced under <a href="https://creativecommons.org/licenses/by/2.0/">CC BY 2.0</a> was used as heading.</string>-->
+    <string name="about_app_attribution">Launcher icon from icons8:\n<a href="https://icons8.com/web-app/11894/comet">https://icons8.com/web-app/11894/comet</a>\nUnchanged image by Day Donaldson from Flicker licenced under CC BY 2.0 was used as heading:\n<a href="https://www.flickr.com/photos/thespeakernews/23688226075">https://www.flickr.com/photos/thespeakernews/23688226075</a></string>
 
 </resources>
