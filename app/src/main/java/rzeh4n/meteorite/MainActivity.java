@@ -1,5 +1,6 @@
 package rzeh4n.meteorite;
 
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -8,10 +9,12 @@ import android.view.MenuItem;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import rzeh4n.meteorite.data.MeteoriteContract;
 
 public class MainActivity extends AppCompatActivity {
 
     @BindView(R.id.toolbar) Toolbar mAppbar;
+    private int mMeteoritesCount = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,10 +24,19 @@ public class MainActivity extends AppCompatActivity {
 
         setSupportActionBar(mAppbar);
         getSupportActionBar().setHomeButtonEnabled(false);
-        // TODO: 11.6.16 replace with actual number from database
-        getSupportActionBar().setTitle("9123 meteorites");
-        getSupportActionBar().setSubtitle("2011 - 2016");
+        getSupportActionBar().setTitle(String.format("%d meteorites", getMeteoritesCount()));
         getSupportActionBar().setDisplayShowTitleEnabled(true);
+    }
+
+    private int getMeteoritesCount() {
+        if (mMeteoritesCount != -1) {
+            return mMeteoritesCount;
+        } else {
+            Cursor cursor = getContentResolver().query(MeteoriteContract.MeteoriteEntry.CONTENT_URI, new String[]{MeteoriteContract.MeteoriteEntry._ID}, null, null, null);
+            mMeteoritesCount = cursor.getCount();
+            cursor.close();
+        }
+        return mMeteoritesCount;
     }
 
     @Override
