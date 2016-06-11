@@ -58,6 +58,7 @@ public class MeteoriteListFragment extends Fragment implements LoaderManager.Loa
         mCursorRecyclerViewAdapter = new RecyclerViewAdapter(getActivity(), null);
         mList.setLayoutManager(new LinearLayoutManager(getActivity()));
         mList.setAdapter(mCursorRecyclerViewAdapter);
+        mList.addItemDecoration(new DividerItemDecoration(getActivity(), null));
         return root;
     }
 
