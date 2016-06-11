@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -69,10 +68,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private void initData(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             mId = savedInstanceState.getLong(EXTRA_ID, -1);
-            Log.i(LOG_TAG, "from saved state: " + mId);
+            //Log.i(LOG_TAG, "from saved state: " + mId);
         } else {
             mId = getIntent().getLongExtra(EXTRA_ID, -1);
-            Log.i(LOG_TAG, "from intent: " + mId);
+            //Log.i(LOG_TAG, "from intent: " + mId);
         }
         if (mId != -1) {
             Uri uri = MeteoriteContract.MeteoriteEntry.buildMeteoriteUri(mId);

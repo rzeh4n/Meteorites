@@ -2,8 +2,7 @@
 <resources>
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
-    <color name="colorAccentLight">#FCE4EC</color>
+    <color name="colorAccent">#FF6E40</color>
 
     <!--list of meteorites-->
     <color name="itemBackground">#ffffff</color>
