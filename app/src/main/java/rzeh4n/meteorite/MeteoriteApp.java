@@ -10,7 +10,8 @@ public class MeteoriteApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Utils.scheduleAlarmForSynchronizationService(this);
+        // TODO: 12.6.16 fix, seems to be scheduled to often
+        //Utils.scheduleAlarmForSynchronizationService(this);
     }
 
 }

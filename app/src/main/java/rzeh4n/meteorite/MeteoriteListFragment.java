@@ -1,7 +1,6 @@
 package rzeh4n.meteorite;
 
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -75,12 +74,8 @@ public class MeteoriteListFragment extends Fragment implements LoaderManager.Loa
     }
 
     @Subscribe
-    public void onMessageEvent(ItemClickEvent event) {
+    public void onMessageEvent(ItemSelectedEvent event) {
         mPosition = event.position;
-        //go to map activity
-        Intent intent = new Intent(getActivity(), MapActivity.class);
-        intent.putExtra(MapActivity.EXTRA_ID, event.meteoriteId);
-        startActivity(intent);
     }
 
     @Override
@@ -135,9 +130,12 @@ public class MeteoriteListFragment extends Fragment implements LoaderManager.Loa
         public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
             private Long mId;
+            private String mName;
+            private Integer mMass;
+
             private int mPosition;
-            @BindView(R.id.name) TextView mName;
-            @BindView(R.id.mass) TextView mMass;
+            @BindView(R.id.name) TextView mNameView;
+            @BindView(R.id.mass) TextView mMassView;
 
             public ViewHolder(View view) {
                 super(view);
@@ -147,15 +145,19 @@ public class MeteoriteListFragment extends Fragment implements LoaderManager.Loa
 
             public void bind(Meteorite meteorite, int position) {
                 mId = meteorite.id;
+                mName = meteorite.name;
+                mMass = meteorite.mass;
                 mPosition = position;
-                mName.setText(meteorite.name);
-                mMass.setText(Utils.formatMass(meteorite.mass));
+                mNameView.setText(mName);
+                mMassView.setText(Utils.formatMass(mMass));
             }
 
             @Override
             public void onClick(View v) {
                 //Log.i(LOG_TAG, "clicked: " + mId);
-                EventBus.getDefault().post(new ItemClickEvent(mId, mPosition));
+                EventBus bus = EventBus.getDefault();
+                bus.post(new ItemSelectedEvent(mPosition));
+                bus.post(new MainActivity.MeteoriteSelectedEvent(mId, mName, mMass));
             }
         }
 
@@ -190,12 +192,10 @@ public class MeteoriteListFragment extends Fragment implements LoaderManager.Loa
         super.onActivityCreated(savedInstanceState);
     }
 
-    public static class ItemClickEvent {
-        public final Long meteoriteId;
+    public static class ItemSelectedEvent {
         public final Integer position;
 
-        public ItemClickEvent(Long meteoriteId, int position) {
-            this.meteoriteId = meteoriteId;
+        public ItemSelectedEvent(Integer position) {
             this.position = position;
         }
     }
