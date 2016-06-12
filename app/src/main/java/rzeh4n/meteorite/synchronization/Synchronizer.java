@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
@@ -52,7 +54,15 @@ public class Synchronizer {
             protected Void doInBackground(Void... params) {
                 //clearDb();
                 try {
-                    synchronize();
+                    ConnectivityManager cm = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+                    NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+                    boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+                    if (isConnected) {
+                        Log.w(LOG_TAG, "synchronizing");
+                        synchronize();
+                    } else {
+                        Log.w(LOG_TAG, "no network connection, ignoring");
+                    }
                 } catch (Throwable e) {
                     mError = true;
                     mErrorMsg = e.getMessage();
@@ -129,7 +139,7 @@ public class Synchronizer {
                 ContentValues[] values = new ContentValues[toBeInserted.size()];
                 values = toBeInserted.toArray(values);
                 int inserted = resolver.bulkInsert(MeteoriteContract.MeteoriteEntry.CONTENT_URI, values);
-                Log.d(LOG_TAG, "inserted: " + inserted);
+                //Log.d(LOG_TAG, "inserted: " + inserted);
             }
 
             private ContentValues buildContentValuesForInsert(Meteorite meteorite) {
